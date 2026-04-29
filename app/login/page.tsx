@@ -185,7 +185,6 @@ export default function LoginPage() {
             }}
             style={{
               color: "var(--ink)",
-              borderBottom: "1px solid var(--ink-3)",
               background: "none",
               border: "none",
               borderBottom: "1px solid var(--ink-3)",
