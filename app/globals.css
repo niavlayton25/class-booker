@@ -1,26 +1,70 @@
 @import "tailwindcss";
+@source "../**/*.{ts,tsx,js,jsx}";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #FBF7F4;
+  --paper-2: #F2EDE9;
+  --surface: #FFFFFF;
+  --ink: #1A1216;
+  --ink-2: #5b4d54;
+  --ink-3: #9b8b93;
+  --ink-4: #C7B7BD;
+  --rule: #EADFE4;
+  --pink: #E5197F;
+  --pink-2: #F7D0E2;
+  --pink-wash: #FBEDF4;
+  --pink-soft: #FCF1F6;
+  --ok: #1f8a5b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-rule: var(--rule);
+  --color-pink: var(--pink);
+  --color-pink-2: var(--pink-2);
+  --color-pink-wash: var(--pink-wash);
+  --color-pink-soft: var(--pink-soft);
+  --color-ok: var(--ok);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-mono: var(--font-jetbrains-mono);
+  --font-fraunces: var(--font-fraunces);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* Responsive layout helpers */
+.tab-bar-mobile {
+  display: flex;
+}
+.desktop-nav-links {
+  display: none;
+}
+.page-bottom-pad {
+  padding-bottom: 100px;
+}
+
+@media (min-width: 768px) {
+  .tab-bar-mobile {
+    display: none;
+  }
+  .desktop-nav-links {
+    display: flex;
+  }
+  .page-bottom-pad {
+    padding-bottom: 40px;
+  }
+  .page-container {
+    max-width: 720px !important;
+    padding: 0 40px;
+  }
 }

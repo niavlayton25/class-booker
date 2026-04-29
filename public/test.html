@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head><title>MT token test</title></head>
+<body>
+  <h2>Step 1: <button onclick="openLogin()">Open Login Popup</button></h2>
+  <p id="status">Waiting...</p>
+  <h2>Step 2: After logging in, click: <button onclick="embedIframe()">Embed iframe</button></h2>
+  <div id="iframe-container"></div>
+
+  <script>
+    window.addEventListener('message', (e) => {
+      if (e.origin !== 'https://fuzehouse.marianaiframes.com') return;
+
+      // e.data may be a string or object
+      let raw;
+      try { raw = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }
+      catch(err) { console.log('[parse error]', e.data); return; }
+
+      const key = Object.keys(raw || {}).find(k => k.startsWith('__post_robot_'));
+      if (!key) { console.log('[non-post-robot message]', raw); return; }
+
+      const msg = raw[key];
+      console.log('[post-robot]', msg.name, msg.type, JSON.stringify(msg.data));
+      document.getElementById('status').textContent = 'Got: ' + msg.name + ' | ' + msg.type;
+
+      if (msg.name === 'postrobot_hello' && msg.type === 'postrobot_message_request') {
+        const response = {};
+        response[key] = {
+          id: msg.id,
+          origin: window.location.origin,
+          type: 'postrobot_message_response',
+          hash: msg.hash,
+          name: msg.name,
+          data: { instanceID: 'parent_' + Date.now() },
+          fireAndForget: false
+        };
+        console.log('[sending hello response to]', e.origin);
+        e.source.postMessage(JSON.stringify(response), 'https://fuzehouse.marianaiframes.com');
+        document.getElementById('status').textContent = 'Handshake sent — watching for next message...';
+      } else {
+        console.log('[INTERESTING MESSAGE]', JSON.stringify(msg, null, 2));
+        document.getElementById('status').textContent = 'NEW MESSAGE: ' + msg.name;
+      }
+    });
+
+    function openLogin() {
+      window.open('https://fuzehouse.marianaiframes.com/iframe/', 'fuze-login', 'width=500,height=700');
+    }
+
+    function embedIframe() {
+      const container = document.getElementById('iframe-container');
+      container.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://fuzehouse.marianaiframes.com/iframe/';
+      iframe.width = '500';
+      iframe.height = '700';
+      iframe.style.border = '1px solid #ccc';
+      container.appendChild(iframe);
+      document.getElementById('status').textContent = 'Iframe embedded — waiting for hello...';
+    }
+  </script>
+</body>
+</html>
