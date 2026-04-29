@@ -29,7 +29,7 @@ export async function GET() {
 
   const res = await fetch(
     `https://fuzehouse.marianatek.com/api/customer/v1/classes?min_start_date=${minDate}&max_start_date=${maxDate}&page_size=500&location=48817&region=48608`,
-    { cache: "no-store" }
+    { next: { revalidate: 300 } }
   );
 
   if (!res.ok) {
