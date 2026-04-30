@@ -31,11 +31,13 @@ export default async function MyClassesPage() {
   const classes = await getFuzeClasses();
 
   return (
-    <div className="page-container" style={{ minHeight: "100vh" }}>
+    <div style={{ minHeight: "100vh" }}>
       <AppNav />
-      <main className="page-bottom-pad" style={{ padding: "18px 12px 100px" }}>
-        <FavoritesList classes={classes} />
-      </main>
+      <div className="page-container">
+        <main className="page-bottom-pad page-main" style={{ padding: "18px 12px 100px" }}>
+          <FavoritesList classes={classes} />
+        </main>
+      </div>
       <TabBar />
     </div>
   );

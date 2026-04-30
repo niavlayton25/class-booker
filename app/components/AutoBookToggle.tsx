@@ -144,17 +144,6 @@ export default function AutoBookToggle({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-      {countdown && (
-        <span
-          style={{
-            fontFamily: "var(--font-jetbrains-mono), monospace",
-            fontSize: 10,
-            color: "var(--pink)",
-          }}
-        >
-          {countdown}
-        </span>
-      )}
       <button
         onClick={isOn ? cancel : enable}
         disabled={working}
@@ -162,12 +151,12 @@ export default function AutoBookToggle({
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          height: 20,
-          padding: "0 10px",
+          height: 24,
+          padding: "0 12px",
           borderRadius: 999,
-          fontSize: 9,
+          fontSize: 10,
           fontWeight: 600,
-          letterSpacing: "0.04em",
+          letterSpacing: "0.02em",
           background: isOn ? "var(--pink)" : "var(--paper-2)",
           color: isOn ? "#fff" : "var(--ink-3)",
           border: `1px solid ${isOn ? "var(--pink)" : "var(--rule)"}`,
@@ -176,7 +165,7 @@ export default function AutoBookToggle({
         }}
         type="button"
       >
-        {isOn ? "ON" : "OFF"}
+        {isOn ? "Autobook on" : "Autobook off"}
       </button>
     </div>
   );

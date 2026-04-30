@@ -112,116 +112,51 @@ export default function FuzeSchedule({ classes }: Props) {
     );
   }
 
+  const dayButtons = weekDays.map((day) => {
+    const isSelected = isSameDay(day, selectedDate);
+    return (
+      <button
+        key={day.toISOString()}
+        onClick={() => setSelectedDate(day)}
+        style={{
+          flex: 1,
+          textAlign: "center",
+          padding: "10px 0",
+          borderRadius: 6,
+          border: `1px solid ${isSelected ? "var(--pink)" : "var(--rule)"}`,
+          background: isSelected ? "var(--pink)" : "var(--surface)",
+          color: isSelected ? "#fff" : "var(--ink)",
+          cursor: "pointer",
+        }}
+      >
+        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1 }}>
+          {day.getDate()}
+        </div>
+        <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.75, marginTop: 3 }}>
+          {day.toLocaleDateString("en-US", { weekday: "short", timeZone: "America/New_York" })}
+        </div>
+      </button>
+    );
+  });
+
   return (
     <div>
-      {/* Studio line */}
-      <div
-        style={{
-          fontSize: 10,
-          marginBottom: 8,
-          display: "flex",
-          gap: 6,
-          alignItems: "center",
-          color: "var(--ink-3)",
-        }}
-      >
-        <span style={{ textTransform: "uppercase", letterSpacing: "0.14em" }}>Studio</span>
-        <span style={{ color: "var(--ink)", fontWeight: 500 }}>Fuze House Tribeca ▾</span>
-      </div>
-
-      {/* Page title */}
-      <div
-        style={{
-          fontFamily: "var(--font-fraunces), serif",
-          fontSize: 24,
-          lineHeight: 1.1,
-          letterSpacing: "-0.01em",
-          color: "var(--ink)",
-          marginBottom: 14,
-        }}
-      >
-        This <span style={{ fontStyle: "italic", color: "var(--pink)" }}>week.</span>
-      </div>
-
-      {/* Day strip with week nav */}
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 16 }}>
-        <button
-          onClick={goToPreviousWeek}
-          style={{
-            flexShrink: 0,
-            width: 22,
-            height: 22,
-            borderRadius: 999,
-            border: "1px solid var(--rule)",
-            background: "transparent",
-            color: "var(--ink-3)",
-            fontSize: 11,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          ←
-        </button>
-
-        <div style={{ display: "flex", gap: 3, flex: 1 }}>
-          {weekDays.map((day) => {
-            const isSelected = isSameDay(day, selectedDate);
-            return (
-              <button
-                key={day.toISOString()}
-                onClick={() => setSelectedDate(day)}
-                style={{
-                  flex: 1,
-                  minWidth: 36,
-                  textAlign: "center",
-                  padding: "10px 0",
-                  borderRadius: 6,
-                  border: `1px solid ${isSelected ? "var(--pink)" : "var(--rule)"}`,
-                  background: isSelected ? "var(--pink)" : "var(--surface)",
-                  color: isSelected ? "#fff" : "var(--ink)",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1 }}>
-                  {day.getDate()}
-                </div>
-                <div
-                  style={{
-                    fontSize: 9,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    opacity: 0.75,
-                    marginTop: 3,
-                  }}
-                >
-                  {day.toLocaleDateString("en-US", { weekday: "short", timeZone: "America/New_York" })}
-                </div>
-              </button>
-            );
-          })}
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 13, marginBottom: 6, display: "flex", gap: 6, alignItems: "center", color: "var(--ink-3)" }}>
+          <span style={{ textTransform: "uppercase", letterSpacing: "0.14em" }}>Studio</span>
+          <span style={{ color: "var(--ink)", fontWeight: 500 }}>Fuze House Tribeca</span>
         </div>
+        <div style={{ fontFamily: "var(--font-fraunces), serif", fontSize: 24, lineHeight: 1.1, letterSpacing: "-0.01em", color: "var(--ink)" }}>
+          This <span style={{ fontStyle: "italic", color: "var(--pink)" }}>week.</span>
+        </div>
+      </div>
 
-        <button
-          onClick={goToNextWeek}
-          style={{
-            flexShrink: 0,
-            width: 22,
-            height: 22,
-            borderRadius: 999,
-            border: "1px solid var(--rule)",
-            background: "transparent",
-            color: "var(--ink-3)",
-            fontSize: 11,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          →
-        </button>
+      {/* Day strip */}
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 16 }}>
+        <button onClick={goToPreviousWeek} style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 999, border: "1px solid var(--rule)", background: "transparent", color: "var(--ink-3)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>←</button>
+        <div style={{ display: "flex", gap: 3, flex: 1 }}>{dayButtons}</div>
+        <button onClick={goToNextWeek} style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 999, border: "1px solid var(--rule)", background: "transparent", color: "var(--ink-3)", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>→</button>
       </div>
 
       {/* Class list */}
@@ -262,12 +197,12 @@ export default function FuzeSchedule({ classes }: Props) {
               <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
                 {cls.title}
               </div>
-              <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 3 }}>
+              <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3 }}>
                 {formatTime(cls.startsAt)} · {cls.instructor ?? "Instructor TBD"} ·{" "}
                 {cls.duration ?? ""}
               </div>
               {cls.availableSpots !== null && cls.capacity !== null && (
-                <div style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 3 }}>
+                <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3 }}>
                   {cls.availableSpots} / {cls.capacity} spots
                 </div>
               )}

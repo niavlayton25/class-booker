@@ -145,7 +145,7 @@ export default function FavoritesList({ classes }: Props) {
             <span
               style={{
                 fontFamily: "var(--font-jetbrains-mono), monospace",
-                fontSize: 9,
+                fontSize: 13,
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
                 color: "var(--ink-3)",
@@ -215,7 +215,7 @@ export default function FavoritesList({ classes }: Props) {
         <span
           style={{
             fontFamily: "var(--font-jetbrains-mono), monospace",
-            fontSize: 9,
+            fontSize: 11,
             letterSpacing: "0.16em",
             textTransform: "uppercase",
             color: "var(--ink-3)",
@@ -258,10 +258,24 @@ export default function FavoritesList({ classes }: Props) {
               <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
                 {cls.title}
               </div>
-              <div style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>
                 {formatDate(cls.startsAt)} · {formatTime(cls.startsAt)} ·{" "}
                 {cls.instructor ?? "Instructor TBD"}
               </div>
+              {cls.bookingStartsAt && (() => {
+                const now = new Date();
+                const target = new Date(cls.bookingStartsAt);
+                const diffMs = target.getTime() - now.getTime();
+                if (diffMs <= 0) return null;
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const label = days > 0 ? `Auto-books in ${days}d ${hours}h` : `Auto-books in ${hours}h`;
+                return (
+                  <div style={{ fontFamily: "var(--font-jetbrains-mono), monospace", fontSize: 12, color: "var(--pink)", marginTop: 4 }}>
+                    {label}
+                  </div>
+                );
+              })()}
             </div>
             <div
               style={{
@@ -272,12 +286,6 @@ export default function FavoritesList({ classes }: Props) {
                 flexShrink: 0,
               }}
             >
-              <AutoBookToggle
-                classSessionId={cls.id}
-                classTitle={cls.title}
-                classStartsAt={cls.startsAt}
-                bookingStartsAt={cls.bookingStartsAt}
-              />
               <button
                 onClick={() => unfavorite(cls.id)}
                 style={{
@@ -293,6 +301,12 @@ export default function FavoritesList({ classes }: Props) {
               >
                 ★
               </button>
+              <AutoBookToggle
+                classSessionId={cls.id}
+                classTitle={cls.title}
+                classStartsAt={cls.startsAt}
+                bookingStartsAt={cls.bookingStartsAt}
+              />
             </div>
           </div>
         );

@@ -30,11 +30,12 @@ export default function LoginPage() {
         setMessage("Check your email for a confirmation link.");
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setError(error.message);
       } else {
-        router.push("/schedule");
+        const onboarded = data.user?.user_metadata?.onboarding_completed;
+        router.push(onboarded ? "/schedule" : "/onboarding");
         router.refresh();
       }
     }

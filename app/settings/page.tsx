@@ -108,9 +108,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="page-container" style={{ minHeight: "100vh" }}>
+    <div style={{ minHeight: "100vh" }}>
       <AppNav />
-      <main className="page-bottom-pad" style={{ padding: "18px 18px 100px" }}>
+      <div className="page-container">
+      <main className="page-bottom-pad page-main" style={{ padding: "18px 18px 100px" }}>
         <div
           style={{
             fontFamily: "var(--font-fraunces), serif",
@@ -289,6 +290,7 @@ export default function SettingsPage() {
           </a>
         </Row>
       </main>
+      </div>
       <TabBar />
     </div>
   );

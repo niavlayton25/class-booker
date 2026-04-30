@@ -52,6 +52,9 @@ body {
 .page-bottom-pad {
   padding-bottom: 100px;
 }
+.page-container {
+  width: 100%;
+}
 
 @media (min-width: 768px) {
   .tab-bar-mobile {
@@ -61,10 +64,16 @@ body {
     display: flex;
   }
   .page-bottom-pad {
-    padding-bottom: 40px;
+    padding-bottom: 48px;
   }
   .page-container {
-    max-width: 720px !important;
-    padding: 0 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+  .page-main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 32px !important;
   }
 }

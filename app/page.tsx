@@ -7,7 +7,7 @@ export default function HomePage() {
       <AppNav publicView />
 
       {/* HERO */}
-      <div style={{ padding: "60px 24px 48px", maxWidth: 740, margin: "0 auto" }}>
+      <div className="page-container" style={{ paddingTop: "80px", paddingBottom: "64px", textAlign: "center" }}>
         <div
           style={{
             display: "inline-flex",
@@ -32,12 +32,12 @@ export default function HomePage() {
           style={{
             fontFamily: "var(--font-fraunces), serif",
             fontWeight: 400,
-            fontSize: "clamp(36px, 5vw, 64px)",
+            fontSize: "clamp(40px, 5.5vw, 80px)",
             lineHeight: 1.05,
             letterSpacing: "-0.02em",
             color: "var(--ink)",
-            marginBottom: 22,
-            maxWidth: 600,
+            maxWidth: 900,
+            margin: "0 auto 24px",
           }}
         >
           Never miss your{" "}
@@ -46,17 +46,17 @@ export default function HomePage() {
         </h1>
         <p
           style={{
-            fontSize: 16,
+            fontSize: 17,
             color: "var(--ink-2)",
             lineHeight: 1.6,
-            marginBottom: 32,
-            maxWidth: 480,
+            maxWidth: 520,
+            margin: "0 auto 36px",
           }}
         >
           PilatesPal watches your studio&apos;s schedule and books the classes you
           love the moment they open. You just show up.
         </p>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
           <Link
             href="/login"
             style={{
@@ -131,7 +131,7 @@ export default function HomePage() {
       </div>
 
       {/* HOW IT WORKS */}
-      <div style={{ padding: "56px 24px", maxWidth: 740, margin: "0 auto" }}>
+      <div className="page-container" style={{ paddingTop: "56px", paddingBottom: "56px", textAlign: "center" }}>
         <div
           style={{
             fontFamily: "var(--font-jetbrains-mono), monospace",
@@ -195,8 +195,8 @@ export default function HomePage() {
       </div>
 
       {/* PRODUCT PREVIEW — full width */}
-      <div style={{ background: "var(--paper-2)", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)", padding: "48px 24px" }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
+      <div style={{ background: "var(--paper-2)", borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)" }}>
+        <div className="page-container" style={{ paddingTop: "48px", paddingBottom: "48px", textAlign: "center" }}>
           <div
             style={{
               fontFamily: "var(--font-jetbrains-mono), monospace",
@@ -221,6 +221,7 @@ export default function HomePage() {
               position: "relative",
               overflow: "hidden",
               maxWidth: 560,
+              margin: "0 auto",
             }}
           >
             {/* Mini phone — Schedule */}
@@ -293,7 +294,7 @@ export default function HomePage() {
       </div>
 
       {/* SECONDARY CTA */}
-      <div style={{ padding: "60px 24px", textAlign: "center" }}>
+      <div className="page-container" style={{ paddingTop: "60px", paddingBottom: "60px", textAlign: "center" }}>
         <div
           style={{
             fontFamily: "var(--font-fraunces), serif",
