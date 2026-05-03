@@ -16,10 +16,12 @@ export async function GET() {
       attempted_at,
       succeeded,
       mt_response_status,
+      mt_response_body,
       error_message,
       auto_book_preferences (
         class_title,
-        class_starts_at
+        class_starts_at,
+        class_session_id
       )
     `)
     .eq("user_id", user.id)

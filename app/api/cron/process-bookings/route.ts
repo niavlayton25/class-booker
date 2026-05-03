@@ -122,9 +122,20 @@ async function fetchPaymentOption(
     );
     if (!res.ok) return null;
     const data = await res.json();
-    const options = data.results ?? data;
+    const options: Array<{ id: string; payment_method_type?: string; payment_method?: { type?: string; credits_remaining?: number } }> = data.results ?? data;
     if (!Array.isArray(options) || options.length === 0) return null;
-    return options[0].id ?? null;
+
+    console.log("[payment_options] available for", classSessionId, JSON.stringify(options.map(o => ({ id: o.id, type: o.payment_method_type ?? o.payment_method?.type }))));
+
+    // Prefer pass/credit options over credit card so we use the user's class pack
+    const passOption = options.find((o) => {
+      const type = o.payment_method_type ?? o.payment_method?.type ?? "";
+      return /pass|credit|package|membership/i.test(type);
+    });
+
+    const chosen = (passOption ?? options[0]).id ?? null;
+    console.log("[payment_options] chosen:", chosen, passOption ? "(pass)" : "(fallback to first)");
+    return chosen;
   } catch {
     return null;
   }
@@ -133,14 +144,11 @@ async function fetchPaymentOption(
 async function bookClass(
   accessToken: string,
   classSessionId: string,
-  paymentOptionId: string | null
 ): Promise<{ status: number; body: string }> {
-  const payload: Record<string, unknown> = {
+  const payload = {
     class_session: { id: classSessionId },
-    is_booked_for_me: true,
     reservation_type: "standard",
   };
-  if (paymentOptionId) payload.payment_option = { id: paymentOptionId };
 
   const res = await fetch(`${MT_BASE}/api/customer/v1/me/reservations`, {
     method: "POST",
@@ -239,14 +247,9 @@ export async function POST(req: NextRequest) {
         }).eq("id", account.id);
       }
 
-      // Fetch payment option for this specific class
-      const paymentOptionId = await fetchPaymentOption(accessToken, pref.class_session_id)
-        ?? account.payment_option_id;
-
       const { status, body } = await bookClass(
         accessToken,
         pref.class_session_id,
-        paymentOptionId
       );
 
       const succeeded = status === 201 || status === 409;

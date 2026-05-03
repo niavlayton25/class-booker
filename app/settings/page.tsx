@@ -10,6 +10,22 @@ type ConnectionStatus = {
   account: { connected_at: string; token_expires_at: string | null } | null;
 };
 
+type MTCredit = {
+  id: string;
+  credits_remaining: number;
+  credits_total: number;
+  is_expired: boolean;
+  credit_type?: { name?: string };
+  expiration_date?: string | null;
+};
+
+type MTMembership = {
+  id: string;
+  membership_type?: { name?: string };
+  status?: string;
+  next_renewal_date?: string | null;
+};
+
 type BookingAttempt = {
   id: string;
   attempted_at: string;
@@ -82,6 +98,9 @@ export default function SettingsPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [history, setHistory] = useState<BookingAttempt[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [credits, setCredits] = useState<MTCredit[]>([]);
+  const [memberships, setMemberships] = useState<MTMembership[]>([]);
+  const [creditsLoading, setCreditsLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/auth/mt-connect")
@@ -95,6 +114,15 @@ export default function SettingsPage() {
       .then((data) => setHistory(data.attempts ?? []))
       .catch(() => setHistory([]))
       .finally(() => setHistoryLoading(false));
+
+    fetch("/api/mt-account/credits")
+      .then((r) => r.json())
+      .then((data) => {
+        setCredits(data.credits ?? []);
+        setMemberships(data.memberships ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setCreditsLoading(false));
   }, []);
 
   async function disconnect() {
@@ -212,6 +240,56 @@ export default function SettingsPage() {
             />
           )}
         </div>
+
+        {/* Credits & memberships */}
+        {(credits.length > 0 || memberships.length > 0 || creditsLoading) && (
+          <>
+            <SectionDivider label="Passes & memberships" />
+            {creditsLoading ? (
+              <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Loading...</div>
+            ) : (
+              <div>
+                {memberships.map((m) => (
+                  <Row key={m.id}>
+                    <div>
+                      <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>
+                        {m.membership_type?.name ?? "Membership"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
+                        {m.next_renewal_date
+                          ? `Renews ${new Date(m.next_renewal_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                          : "No renewal date"}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--ok)", background: "#E8F5EE", padding: "3px 8px", borderRadius: 999, border: "1px solid var(--ok)" }}>
+                      {m.status ?? "Active"}
+                    </span>
+                  </Row>
+                ))}
+                {credits.map((c) => (
+                  <Row key={c.id}>
+                    <div>
+                      <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>
+                        {c.credit_type?.name ?? "Class pack"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
+                        {c.expiration_date
+                          ? `Expires ${new Date(c.expiration_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                          : "No expiration"}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: c.credits_remaining === 0 ? "var(--ink-3)" : "var(--ink)" }}>
+                        {c.credits_remaining} <span style={{ fontWeight: 400, color: "var(--ink-3)" }}>/ {c.credits_total}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 1 }}>remaining</div>
+                    </div>
+                  </Row>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
         {/* Booking history */}
         <SectionDivider label="Booking history" />

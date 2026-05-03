@@ -20,11 +20,36 @@ type BookingAttempt = {
   id: string;
   attempted_at: string;
   succeeded: boolean;
+  mt_response_status: number | null;
+  mt_response_body: string | null;
   auto_book_preferences: {
     class_title: string | null;
     class_starts_at: string | null;
+    class_session_id: string | null;
   } | null;
 };
+
+function bookingFailureMessage(status: number | null, body: string | null): string {
+  if (status === 401) return "Re-authenticate in Settings to fix this.";
+  if (status === 503) return "Studio booking system was down. Will retry.";
+  if (status === 422) {
+    const text = (body ?? "").toLowerCase();
+    if (text.includes("payment") || text.includes("cost") || text.includes("credit")) {
+      return "No class pack found. Check your credits in the Fuze House app.";
+    }
+    if (text.includes("full") || text.includes("capacity") || text.includes("available")) {
+      return "Class was full when booking opened.";
+    }
+    if (text.includes("already") || text.includes("duplicate")) {
+      return "Already booked in this class.";
+    }
+    if (text.includes("window") || text.includes("not open") || text.includes("too early")) {
+      return "Booking window wasn't open yet.";
+    }
+    return "Booking rejected by studio.";
+  }
+  return "Booking failed. Try again from Settings.";
+}
 
 type Props = {
   classes: StudioClass[];
@@ -66,6 +91,7 @@ export default function FavoritesList({ classes }: Props) {
   const [mounted, setMounted] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [bookedClasses, setBookedClasses] = useState<BookingAttempt[]>([]);
+  const [failedAttempts, setFailedAttempts] = useState<BookingAttempt[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -79,12 +105,21 @@ export default function FavoritesList({ classes }: Props) {
       .then((r) => r.json())
       .then((data) => {
         const now = new Date();
-        const upcoming = (data.attempts ?? []).filter((a: BookingAttempt) => {
+        const attempts: BookingAttempt[] = data.attempts ?? [];
+        const upcoming = attempts.filter((a) => {
           if (!a.succeeded) return false;
           const classTime = a.auto_book_preferences?.class_starts_at;
           return classTime && new Date(classTime) > now;
         });
         setBookedClasses(upcoming);
+        // Most recent failed attempt per class session
+        const failedMap = new Map<string, BookingAttempt>();
+        for (const a of attempts) {
+          if (a.succeeded) continue;
+          const sessionId = a.auto_book_preferences?.class_session_id;
+          if (sessionId && !failedMap.has(sessionId)) failedMap.set(sessionId, a);
+        }
+        setFailedAttempts(Array.from(failedMap.values()));
       })
       .catch(() => {});
 
@@ -242,6 +277,9 @@ export default function FavoritesList({ classes }: Props) {
 
       {favorited.map((cls, i) => {
         const isLast = i === favorited.length - 1;
+        const failedAttempt = failedAttempts.find(
+          (a) => a.auto_book_preferences?.class_session_id === cls.id
+        );
         return (
           <div
             key={cls.id}
@@ -276,6 +314,11 @@ export default function FavoritesList({ classes }: Props) {
                   </div>
                 );
               })()}
+              {failedAttempt && (
+                <div style={{ fontSize: 11, color: "#B0203F", marginTop: 4 }}>
+                  ✗ {bookingFailureMessage(failedAttempt.mt_response_status, failedAttempt.mt_response_body)}
+                </div>
+              )}
             </div>
             <div
               style={{
