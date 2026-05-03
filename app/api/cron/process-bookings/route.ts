@@ -145,10 +145,22 @@ async function bookClass(
   accessToken: string,
   classSessionId: string,
 ): Promise<{ status: number; body: string }> {
-  const payload = {
+  // Fetch available payment options for this specific class session so we can
+  // pass the right one. MT returns 422 "payments do not satisfy the cost" when
+  // no payment_option is provided for a class that has a non-zero cost.
+  const paymentOptionId = await fetchPaymentOption(accessToken, classSessionId);
+
+  const payload: Record<string, unknown> = {
     class_session: { id: classSessionId },
     reservation_type: "standard",
   };
+
+  if (paymentOptionId) {
+    payload.payment_option = { id: paymentOptionId };
+    console.log("[bookClass] using payment_option:", paymentOptionId);
+  } else {
+    console.log("[bookClass] no payment option found, proceeding without");
+  }
 
   const res = await fetch(`${MT_BASE}/api/customer/v1/me/reservations`, {
     method: "POST",
@@ -160,6 +172,7 @@ async function bookClass(
   });
 
   const body = await res.text();
+  console.log("[bookClass] status:", res.status, "body:", body.slice(0, 500));
   return { status: res.status, body };
 }
 

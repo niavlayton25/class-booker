@@ -12,11 +12,12 @@ type ConnectionStatus = {
 
 type MTCredit = {
   id: string;
+  name: string;
   credits_remaining: number;
   credits_total: number;
+  credits_used: number;
   is_expired: boolean;
-  credit_type?: { name?: string };
-  expiration_date?: string | null;
+  expiration_datetime?: string | null;
 };
 
 type MTMembership = {
@@ -88,6 +89,164 @@ function Row({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+    </div>
+  );
+}
+
+function PlanCard({
+  label,
+  used,
+  total,
+  expiresAt,
+  renewsAt,
+}: {
+  label: string;
+  used: number;
+  total: number;
+  expiresAt?: string | null;
+  renewsAt?: string | null;
+}) {
+  const remaining = total - used;
+  const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
+  const isLow = remaining <= 1;
+  const dateLabel = renewsAt
+    ? `Renews ${new Date(renewsAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+    : expiresAt
+    ? `Expires ${new Date(expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+    : null;
+
+  return (
+    <div
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--rule)",
+        borderRadius: 10,
+        padding: 14,
+        marginBottom: 8,
+      }}
+    >
+      {/* Eyebrow */}
+      <div
+        style={{
+          fontFamily: "var(--font-jetbrains-mono), monospace",
+          fontSize: 9,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "var(--ink-3)",
+          marginBottom: 6,
+        }}
+      >
+        {label}
+      </div>
+
+      {/* Large number */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
+        <span
+          style={{
+            fontFamily: "var(--font-fraunces), serif",
+            fontSize: 36,
+            lineHeight: 1,
+            color: isLow ? "var(--pink)" : "var(--ink)",
+          }}
+        >
+          {remaining}
+        </span>
+        <span style={{ fontSize: 13, color: "var(--ink-3)" }}>/ {total}</span>
+        <span style={{ fontSize: 12, color: "var(--ink-2)", marginLeft: 2 }}>remaining</span>
+      </div>
+
+      {/* Progress bar */}
+      <div
+        style={{
+          height: 4,
+          borderRadius: 999,
+          background: "var(--rule)",
+          overflow: "hidden",
+          marginBottom: 10,
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${pct}%`,
+            borderRadius: 999,
+            background: isLow ? "var(--pink)" : "var(--ok)",
+          }}
+        />
+      </div>
+
+      {/* Low credit warning */}
+      {isLow && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 10px",
+            background: "var(--pink-soft)",
+            border: "1px solid var(--pink-rule)",
+            borderRadius: 8,
+            marginBottom: 10,
+          }}
+        >
+          <span style={{ color: "var(--pink)", fontSize: 12 }}>!</span>
+          <span style={{ fontSize: 11, color: "var(--pink-ink)" }}>
+            {remaining === 0 ? "No credits left" : "Only 1 credit left"} — purchase more in the studio app.
+          </span>
+        </div>
+      )}
+
+      {/* Footer */}
+      {dateLabel && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: 8,
+            borderTop: "1px solid var(--rule)",
+          }}
+        >
+          <span style={{ fontSize: 11, color: "var(--ink-3)" }}>{dateLabel}</span>
+          <a
+            href="https://fuzehouse.marianatek.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 11, color: "var(--ink-2)", textDecoration: "none" }}
+          >
+            Manage in Fuze ↗
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlanCardEmpty() {
+  return (
+    <div
+      style={{
+        border: "1.5px dashed var(--pink-rule)",
+        borderRadius: 10,
+        padding: 14,
+        marginBottom: 8,
+        background: "var(--pink-soft)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ fontSize: 12, color: "var(--pink-ink)" }}>
+        <span style={{ marginRight: 6 }}>!</span>No active credits or membership
+      </div>
+      <a
+        href="https://fuzehouse.marianatek.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ fontSize: 11, color: "var(--ink-2)", textDecoration: "none", flexShrink: 0 }}
+      >
+        Open Fuze app ↗
+      </a>
     </div>
   );
 }
@@ -242,53 +401,32 @@ export default function SettingsPage() {
         </div>
 
         {/* Credits & memberships */}
-        {(credits.length > 0 || memberships.length > 0 || creditsLoading) && (
-          <>
-            <SectionDivider label="Passes & memberships" />
-            {creditsLoading ? (
-              <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Loading...</div>
-            ) : (
-              <div>
-                {memberships.map((m) => (
-                  <Row key={m.id}>
-                    <div>
-                      <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>
-                        {m.membership_type?.name ?? "Membership"}
-                      </div>
-                      <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
-                        {m.next_renewal_date
-                          ? `Renews ${new Date(m.next_renewal_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
-                          : "No renewal date"}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--ok)", background: "#E8F5EE", padding: "3px 8px", borderRadius: 999, border: "1px solid var(--ok)" }}>
-                      {m.status ?? "Active"}
-                    </span>
-                  </Row>
-                ))}
-                {credits.map((c) => (
-                  <Row key={c.id}>
-                    <div>
-                      <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>
-                        {c.credit_type?.name ?? "Class pack"}
-                      </div>
-                      <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
-                        {c.expiration_date
-                          ? `Expires ${new Date(c.expiration_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
-                          : "No expiration"}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: c.credits_remaining === 0 ? "var(--ink-3)" : "var(--ink)" }}>
-                        {c.credits_remaining} <span style={{ fontWeight: 400, color: "var(--ink-3)" }}>/ {c.credits_total}</span>
-                      </div>
-                      <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 1 }}>remaining</div>
-                    </div>
-                  </Row>
-                ))}
-              </div>
-            )}
-          </>
+        <SectionDivider label="Passes & memberships" />
+        {creditsLoading ? (
+          <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Loading...</div>
+        ) : credits.length === 0 && memberships.length === 0 ? (
+          <PlanCardEmpty />
+        ) : (
+          <div>
+            {memberships.map((m) => (
+              <PlanCard
+                key={m.id}
+                label={m.membership_type?.name ?? "Membership"}
+                used={0}
+                total={0}
+                renewsAt={m.next_renewal_date}
+              />
+            ))}
+            {credits.map((c) => (
+              <PlanCard
+                key={c.id}
+                label={c.name ?? "Class pack"}
+                used={c.credits_used}
+                total={c.credits_total}
+                expiresAt={c.expiration_datetime}
+              />
+            ))}
+          </div>
         )}
 
         {/* Booking history */}

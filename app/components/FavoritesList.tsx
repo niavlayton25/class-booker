@@ -51,6 +51,30 @@ function bookingFailureMessage(status: number | null, body: string | null): stri
   return "Booking failed. Try again from Settings.";
 }
 
+function failureReasonTag(status: number | null, body: string | null): string {
+  if (status === 401) return "! Login expired";
+  if (status === 503) return "! Studio down";
+  if (status === 422) {
+    const text = (body ?? "").toLowerCase();
+    if (text.includes("payment") || text.includes("cost") || text.includes("credit")) return "! No class pack";
+    if (text.includes("full") || text.includes("capacity") || text.includes("available")) return "! Class full";
+    if (text.includes("already") || text.includes("duplicate")) return "! Already booked";
+    if (text.includes("window") || text.includes("not open") || text.includes("too early")) return "! Too early";
+    return "! Booking rejected";
+  }
+  return "! Failed";
+}
+
+function timeAgo(isoString: string): string {
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 type Props = {
   classes: StudioClass[];
 };
@@ -277,9 +301,6 @@ export default function FavoritesList({ classes }: Props) {
 
       {favorited.map((cls, i) => {
         const isLast = i === favorited.length - 1;
-        const failedAttempt = failedAttempts.find(
-          (a) => a.auto_book_preferences?.class_session_id === cls.id
-        );
         return (
           <div
             key={cls.id}
@@ -314,11 +335,6 @@ export default function FavoritesList({ classes }: Props) {
                   </div>
                 );
               })()}
-              {failedAttempt && (
-                <div style={{ fontSize: 11, color: "#B0203F", marginTop: 4 }}>
-                  ✗ {bookingFailureMessage(failedAttempt.mt_response_status, failedAttempt.mt_response_body)}
-                </div>
-              )}
             </div>
             <div
               style={{
@@ -354,6 +370,106 @@ export default function FavoritesList({ classes }: Props) {
           </div>
         );
       })}
+
+      {/* Didn't book */}
+      {failedAttempts.length > 0 && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              margin: "24px 0 10px",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-jetbrains-mono), monospace",
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "var(--pink-ink)",
+              }}
+            >
+              Didn&apos;t book
+            </span>
+            <div style={{ flex: 1, height: 1, background: "var(--pink-rule)" }} />
+          </div>
+
+          {failedAttempts.map((attempt) => {
+            const pref = attempt.auto_book_preferences;
+            const tag = failureReasonTag(attempt.mt_response_status, attempt.mt_response_body);
+            const message = bookingFailureMessage(attempt.mt_response_status, attempt.mt_response_body);
+            return (
+              <div
+                key={attempt.id}
+                style={{
+                  border: "1px solid var(--pink-rule)",
+                  background: "var(--pink-soft)",
+                  borderRadius: 10,
+                  padding: 14,
+                  marginBottom: 8,
+                }}
+              >
+                {/* Reason tag */}
+                <div style={{ marginBottom: 8 }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: "var(--pink-ink)",
+                      background: "var(--surface)",
+                      border: "1px solid var(--pink-rule)",
+                      borderRadius: 999,
+                      padding: "2px 8px",
+                    }}
+                  >
+                    {tag}
+                  </span>
+                </div>
+
+                {/* Class name (strikethrough) + meta */}
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "var(--ink-2)",
+                    textDecoration: "line-through",
+                    marginBottom: 2,
+                  }}
+                >
+                  {pref?.class_title ?? "Unknown class"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 6 }}>
+                  {pref?.class_starts_at
+                    ? `${formatDate(pref.class_starts_at)} · ${formatTime(pref.class_starts_at)}`
+                    : ""}
+                  {" · "}Tried {timeAgo(attempt.attempted_at)}
+                </div>
+
+                {/* Reason copy */}
+                <div style={{ fontSize: 12, color: "var(--pink-ink)", marginBottom: 10 }}>
+                  {message}
+                </div>
+
+                {/* See what happened link */}
+                <a
+                  href={`/failure/${attempt.id}`}
+                  style={{
+                    fontSize: 12,
+                    color: "var(--ink-2)",
+                    textDecoration: "none",
+                    borderBottom: "1px solid var(--ink-3)",
+                  }}
+                >
+                  See what happened →
+                </a>
+              </div>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }
