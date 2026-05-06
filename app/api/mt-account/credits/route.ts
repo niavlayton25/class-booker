@@ -58,16 +58,35 @@ export async function GET() {
     }
   }
 
-  const [creditsRes, membershipsRes] = await Promise.all([
-    fetch(`${MT_BASE}/api/customer/v1/me/credits?is_active=True&page_size=20`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }),
-    fetch(`${MT_BASE}/api/customer/v1/me/memberships?page_size=20`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }),
-  ]);
+  async function fetchWithToken(token: string) {
+    return Promise.all([
+      fetch(`${MT_BASE}/api/customer/v1/me/credits?is_active=True&page_size=20`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`${MT_BASE}/api/customer/v1/me/memberships?page_size=20`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
+  }
 
+  let [creditsRes, membershipsRes] = await fetchWithToken(accessToken);
   console.log("[credits] MT status:", creditsRes.status, membershipsRes.status);
+
+  // If 401, token is expired — force a refresh and retry
+  if (creditsRes.status === 401 && account.refresh_token) {
+    console.log("[credits] 401 received, forcing token refresh...");
+    const refreshed = await refreshToken(await decrypt(account.refresh_token));
+    if (refreshed) {
+      accessToken = refreshed.accessToken;
+      await service.from("mariana_tek_accounts").update({
+        access_token: await encrypt(refreshed.accessToken),
+        refresh_token: await encrypt(refreshed.refreshToken),
+        token_expires_at: new Date(Date.now() + refreshed.expiresIn * 1000).toISOString(),
+      }).eq("id", account.id);
+      [creditsRes, membershipsRes] = await fetchWithToken(accessToken);
+      console.log("[credits] MT status after refresh:", creditsRes.status, membershipsRes.status);
+    }
+  }
 
   const creditsData = creditsRes.ok ? await creditsRes.json() : null;
   const membershipsData = membershipsRes.ok ? await membershipsRes.json() : null;
