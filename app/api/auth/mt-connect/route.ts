@@ -37,7 +37,13 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
   const body = await req.json();
-  const { accessToken, refreshToken, expiresIn, tokenType } = body;
+  console.log("[mt-connect] received body keys:", Object.keys(body));
+
+  // MT cookie may use snake_case or camelCase — handle both
+  const accessToken = body.accessToken ?? body.access_token;
+  const refreshToken = body.refreshToken ?? body.refresh_token;
+  const expiresIn = body.expiresIn ?? body.expires_in;
+  const tokenType = body.tokenType ?? body.token_type;
 
   if (!accessToken) {
     return NextResponse.json({ error: "accessToken is required" }, { status: 400, headers: CORS_HEADERS });
