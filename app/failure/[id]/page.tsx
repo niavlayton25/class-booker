@@ -73,7 +73,6 @@ export default function FailureDetailPage() {
 
   const [attempt, setAttempt] = useState<BookingAttempt | null>(null);
   const [loading, setLoading] = useState(true);
-  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     fetch(`/api/booking-history/${id}`)
@@ -189,34 +188,7 @@ export default function FailureDetailPage() {
 
               {/* Actions */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <button
-                  onClick={async () => {
-                    setRetrying(true);
-                    try {
-                      await fetch("/api/cron/process-bookings", { method: "POST" });
-                    } finally {
-                      setRetrying(false);
-                    }
-                  }}
-                  disabled={retrying}
-                  style={{
-                    width: "100%",
-                    padding: "14px",
-                    background: "var(--pink)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 999,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    cursor: retrying ? "not-allowed" : "pointer",
-                    opacity: retrying ? 0.6 : 1,
-                  }}
-                  type="button"
-                >
-                  {retrying ? "Retrying..." : "Try again"}
-                </button>
-
-                <a
+                <
                   href="/schedule"
                   style={{
                     display: "block",

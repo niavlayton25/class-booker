@@ -122,19 +122,42 @@ async function fetchPaymentOption(
     );
     if (!res.ok) return null;
     const data = await res.json();
-    const options: Array<{ id: string; payment_method_type?: string; payment_method?: { type?: string; credits_remaining?: number } }> = data.results ?? data;
-    if (!Array.isArray(options) || options.length === 0) return null;
 
-    console.log("[payment_options] available for", classSessionId, JSON.stringify(options.map(o => ({ id: o.id, type: o.payment_method_type ?? o.payment_method?.type }))));
+    // Response shape: { user_payment_options: [{ id: "credit-884384", ... }], guest_payment_options: [...] }
+    const options: Array<{ id: string; type?: string }> = data.user_payment_options ?? [];
+    if (options.length === 0) {
+      console.log("[payment_option] no user_payment_options for", classSessionId);
+      return null;
+    }
 
-    // Prefer pass/credit options over credit card so we use the user's class pack
-    const passOption = options.find((o) => {
-      const type = o.payment_method_type ?? o.payment_method?.type ?? "";
-      return /pass|credit|package|membership/i.test(type);
+    type PaymentOption = {
+      id: string;
+      type?: string;
+      credit_payment?: { credits_remaining?: number; expiration_datetime?: string | null };
+    };
+
+    // Only consider user credit options
+    const creditOptions = (options as PaymentOption[]).filter(
+      (o) => o.type === "credit" || o.id.startsWith("credit-")
+    );
+
+    if (creditOptions.length === 0) {
+      console.log("[payment_option] no credit options, falling back to first available");
+      return options[0].id;
+    }
+
+    // If multiple credits, prefer the one expiring soonest (use expiring credits first)
+    creditOptions.sort((a, b) => {
+      const aExp = a.credit_payment?.expiration_datetime;
+      const bExp = b.credit_payment?.expiration_datetime;
+      if (!aExp && !bExp) return 0;
+      if (!aExp) return 1;
+      if (!bExp) return -1;
+      return new Date(aExp).getTime() - new Date(bExp).getTime();
     });
 
-    const chosen = (passOption ?? options[0]).id ?? null;
-    console.log("[payment_options] chosen:", chosen, passOption ? "(pass)" : "(fallback to first)");
+    const chosen = creditOptions[0].id;
+    console.log("[payment_option] chosen:", chosen, `(${creditOptions.length} credit option(s)), for session`, classSessionId);
     return chosen;
   } catch {
     return null;
@@ -145,21 +168,18 @@ async function bookClass(
   accessToken: string,
   classSessionId: string,
 ): Promise<{ status: number; body: string }> {
-  // Fetch available payment options for this specific class session so we can
-  // pass the right one. MT returns 422 "payments do not satisfy the cost" when
-  // no payment_option is provided for a class that has a non-zero cost.
   const paymentOptionId = await fetchPaymentOption(accessToken, classSessionId);
 
   const payload: Record<string, unknown> = {
     class_session: { id: classSessionId },
+    is_booked_for_me: true,
     reservation_type: "standard",
   };
 
   if (paymentOptionId) {
     payload.payment_option = { id: paymentOptionId };
-    console.log("[bookClass] using payment_option:", paymentOptionId);
   } else {
-    console.log("[bookClass] no payment option found, proceeding without");
+    console.log("[bookClass] no usable credit found — booking may fail");
   }
 
   const res = await fetch(`${MT_BASE}/api/customer/v1/me/reservations`, {
