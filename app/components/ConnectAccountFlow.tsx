@@ -19,7 +19,7 @@ export default function ConnectAccountFlow({ onConnected }: { onConnected: () =>
         if (!token) return;
         const origin = window.location.origin;
         setSnippet(
-          `const c = document.cookie.split(';').map(s=>s.trim()).find(s=>s.startsWith('mt.cookie.settings.'));\nconst val = JSON.parse(decodeURIComponent(c.split('=').slice(1).join('=')));\nconsole.log('cookie data:', val);\nfetch('${origin}/api/auth/mt-connect', {\n  method: 'POST',\n  headers: {'Content-Type':'application/json','X-Connect-Token':'${token}'},\n  body: JSON.stringify(val.tokenData || val)\n}).then(r => r.json()).then(d => { console.log(d); alert(d.ok ? 'Connected! Go back to PilatesPal.' : 'Error: ' + d.error); });`
+          `const origSRH = XMLHttpRequest.prototype.setRequestHeader;\nXMLHttpRequest.prototype.setRequestHeader = function(header, value) {\n  if (header.toLowerCase() === 'authorization' && value && value !== 'Bearer null') {\n    fetch('${origin}/api/auth/mt-connect', {\n      method: 'POST',\n      headers: {'Content-Type':'application/json','X-Connect-Token':'${token}'},\n      body: JSON.stringify({access_token: value.replace('Bearer ', '')})\n    }).then(r => r.json()).then(d => {\n      XMLHttpRequest.prototype.setRequestHeader = origSRH;\n      alert(d.ok ? 'Connected! Go back to PilatesPal.' : 'Error: ' + d.error);\n    });\n  }\n  return origSRH.apply(this, arguments);\n};\nalert('Interceptor ready — now interact with the page (e.g. navigate to Classes).');`
         );
       });
   }, []);
