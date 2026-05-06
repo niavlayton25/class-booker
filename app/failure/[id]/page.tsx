@@ -188,7 +188,7 @@ export default function FailureDetailPage() {
 
               {/* Actions */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <
+                <a
                   href="/schedule"
                   style={{
                     display: "block",
